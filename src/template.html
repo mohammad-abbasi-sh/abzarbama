@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ابزارباما — همه‌ی ابزارهای فارسی، یه‌جا</title>
+<meta name="description" content="ابزارباما: هاب یکپارچه‌ی ابزارهای فارسی. مسیریاب وب ایران، تحلیل‌گر GEO فارسی و ابزارهای بیشتر — ساده، بدون دانش فنی.">
+<style>
+{{HUB_CSS}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="badge">نسخه‌ی آزمایشی — ابزارها هر هفته بیشتر می‌شن</div>
+  <h1>ابزار<span class="t">باما</span></h1>
+  <div class="tagline">همه‌ی ابزارهای فارسی، یه‌جا — ساده</div>
+  <p class="sub">لازم نیست بدونی MCP چیه یا سئو یعنی چی. فقط بنویس چی لازم داری؛ ابزارباما خودش بهترین ابزار رو پیدا می‌کنه و قدم‌به‌قدم راهنماییت می‌کنه.</p>
+</header>
+
+<div class="hero">
+  <label for="hq">چی لازم داری؟ 👇</label>
+  <div class="inrow">
+    <input id="hq" type="text" placeholder="مثلاً: قیمت سکه امامی … یا: متنم رو تحلیل کن" autocomplete="off">
+    <button id="hgo">ببرم به ابزار</button>
+  </div>
+  <div class="intent-hint" id="intent-hint"></div>
+  <div class="chips" id="hero-chips">
+    <button>قیمت سکه امامی</button>
+    <button>بلیط هواپیما تهران مشهد</button>
+    <button>متنم رو تحلیل کن</button>
+  </div>
+</div>
+
+<div class="tabs">
+  <button id="tab-router" class="active"><span class="em">🧭</span>مسیریاب وب ایران<small>بهترین ابزار برای کارت — از بین ۷۱ سرور</small></button>
+  <button id="tab-geo"><span class="em">📊</span>تحلیل‌گر GEO فارسی<small>متنت چقدر برای هوش مصنوعی مناسبه؟</small></button>
+</div>
+
+<div class="toolpane active" id="pane-router">
+  <input id="rq" class="tin" type="text" placeholder="کارت چیه؟ مثلاً: قیمت دلار، نوبت دکتر، خرید گوشی…" autocomplete="off">
+  <div class="chips" id="router-chips"></div>
+  <button class="gobtn" id="rgo">🔍 پیدا کن</button>
+  <div class="meta" id="rmeta"></div>
+  <div class="results" id="rresults"></div>
+</div>
+
+<div class="toolpane" id="pane-geo">
+  <textarea id="gta" class="ta" placeholder="متنی که می‌خوای هوش مصنوعی بهش استناد کنه رو اینجا بچسبون…"></textarea>
+  <div class="chips" id="geo-chips"></div>
+  <button class="gobtn" id="ggo">📊 تحلیل کن</button>
+  <div id="gout"></div>
+</div>
+
+<footer>
+  ابزارباما — ساخته‌ی <a href="https://github.com/mohammad-abbasi-sh">محمد عباسی</a><br>
+  ابزارها: <a href="https://github.com/mohammad-abbasi-sh/iran-mcp-router">مسیریاب وب ایران</a> •
+  <a href="https://github.com/mohammad-abbasi-sh/persian-geo-analyzer">تحلیل‌گر GEO فارسی</a><br>
+  همه‌چیز همین‌جا، توی مرورگر خودت اجرا می‌شه — بدون ارسال اطلاعات به هیچ سروری.
+</footer>
+
+</div>
+
+<script>
+"use strict";
+const RouterNS = (() => {
+  const window = {};
+{{ROUTER_DATA}}
+{{ROUTER_RULES}}
+{{ROUTER_CORE}}
+  return { route: route };
+})();
+</script>
+<script>
+"use strict";
+const GeoNS = (() => {
+{{GEO_CORE}}
+  return { scoreText: scoreText, suggestFixes: suggestFixes };
+})();
+</script>
+<script>
+"use strict";
+{{HUB_JS}}
+</script>
+</body>
+</html>
