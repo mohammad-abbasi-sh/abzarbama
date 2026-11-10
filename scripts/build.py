@@ -4,8 +4,7 @@
 Sources (never hand-edit the generated file):
   src/template.html   HTML shell with {{PLACEHOLDERS}}
   src/hub.css         hub styles
-  src/hub.js          hub shell: tabs, intent router, tool UIs
-  iran-mcp-router/index.html   script blocks 0/1/2 (catalog, rules, route core)
+  src/hub.js          hub shell: tabs, intent detection, tool UIs
   persian-geo-analyzer/index.html   script before /* ---------- UI ---------- */
 
 Usage: python3 scripts/build.py
@@ -19,20 +18,6 @@ GP = Path.home() / "workspace" / "github-profile" / "projects"
 
 def read(p):
     return Path(p).read_text(encoding="utf-8")
-
-def extract_router():
-    html = read(GP / "iran-mcp-router" / "index.html")
-    blocks = re.findall(r"<script>(.*?)</script>", html, re.S)
-    if len(blocks) != 3:
-        raise SystemExit(f"expected 3 script blocks in router index.html, got {len(blocks)}")
-    data, rules, ui = blocks
-    cut = ui.find('const $q = document.getElementById')
-    if cut < 0:
-        raise SystemExit("router UI cut marker not found")
-    core = ui[:cut]
-    if "function route(" not in core:
-        raise SystemExit("route() missing from extracted router core")
-    return data, rules, core
 
 def extract_geo():
     html = read(GP / "persian-geo-analyzer" / "index.html")
@@ -49,14 +34,10 @@ def extract_geo():
     return core
 
 def main():
-    data, rules, rcore = extract_router()
     gcore = extract_geo()
     tpl = read(ROOT / "src" / "template.html")
     out = (tpl
            .replace("{{HUB_CSS}}", read(ROOT / "src" / "hub.css"))
-           .replace("{{ROUTER_DATA}}", data)
-           .replace("{{ROUTER_RULES}}", rules)
-           .replace("{{ROUTER_CORE}}", rcore)
            .replace("{{GEO_CORE}}", gcore)
            .replace("{{HUB_JS}}", read(ROOT / "src" / "hub.js")))
     if "{{" in out:
