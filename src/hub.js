@@ -1,6 +1,6 @@
 "use strict";
-/* Abzarbama hub shell. Expects RouterNS {route} and GeoNS {scoreText, suggestFixes}
-   to be defined by earlier script blocks (inlined at build time). */
+/* Abzarbama hub shell. Expects GeoNS {scoreText, suggestFixes}
+   to be defined by an earlier script block (inlined at build time). */
 
 /* ---------- shared helpers ---------- */
 function escapeHtml(s) {
@@ -20,23 +20,25 @@ function copyText(btn, text) {
 }
 
 /* ---------- tabs ---------- */
-const TOOL_ORDER = ["router", "geo"];
+const TOOL_ORDER = ["geo"];
 function showTool(id) {
   TOOL_ORDER.forEach(t => {
-    document.getElementById("tab-" + t).classList.toggle("active", t === id);
-    document.getElementById("pane-" + t).classList.toggle("active", t === id);
+    const tab = document.getElementById("tab-" + t);
+    if (tab) tab.classList.toggle("active", t === id);
+    const pane = document.getElementById("pane-" + t);
+    if (pane) pane.classList.toggle("active", t === id);
   });
 }
 TOOL_ORDER.forEach(t => {
-  document.getElementById("tab-" + t).onclick = () => showTool(t);
+  const tab = document.getElementById("tab-" + t);
+  if (tab) tab.onclick = () => showTool(t);
 });
 
 /* ---------- hero intent detection ---------- */
 const INTENT_RULES = [
   { tool: "geo", kws: ["متن", "مقاله", "محتوا", "سئو", "تحلیل", "نمره", "استناد", "خوانا", "بررسی", "بنویس", "متنم"] },
-  { tool: "router", kws: ["قیمت", "بلیط", "خرید", "سرور", "ابزار", "پیدا", "سرویس", "mcp", "نصب", "سکه", "طلا", "دلار", "خودرو", "کتاب", "دکتر", "سفر"] },
 ];
-const TOOL_NAMES = { router: "مسیریاب وب ایران", geo: "تحلیل‌گر GEO فارسی" };
+const TOOL_NAMES = { geo: "تحلیل‌گر GEO فارسی" };
 function detectIntent(q) {
   const nq = q.replace(/‌/g, "");
   let best = null, bestScore = 0;
@@ -50,77 +52,18 @@ const $hq = document.getElementById("hq");
 const $hint = document.getElementById("intent-hint");
 function heroGo() {
   const q = $hq.value.trim();
-  if (!q) { $hint.innerHTML = "یه چیزی بنویس — مثلاً «قیمت سکه» یا «متنم رو تحلیل کن»."; return; }
-  const tool = detectIntent(q);
-  if (tool === "geo") {
-    showTool("geo");
-    document.getElementById("gta").value = q.length > 20 ? q : "";
-    $hint.innerHTML = `به نظر میاد کارت با <b>${TOOL_NAMES.geo}</b> راه میفته — بازش کردم 👇`;
-    document.getElementById("pane-geo").scrollIntoView({ behavior: "smooth", block: "start" });
-    if (q.length > 20) renderGeo();
-  } else {
-    showTool("router");
-    document.getElementById("rq").value = q;
-    $hint.innerHTML = tool
-      ? `به نظر میاد کارت با <b>${TOOL_NAMES.router}</b> راه میفته — بازش کردم 👇`
-      : `مطمئن نیستم کدوم ابزار — حدس می‌زنم <b>${TOOL_NAMES.router}</b>؛ اگه نه، تب اون یکی رو بزن 👇`;
-    document.getElementById("pane-router").scrollIntoView({ behavior: "smooth", block: "start" });
-    renderRouter();
-  }
+  if (!q) { $hint.innerHTML = "یه چیزی بنویس — مثلاً «متنم رو تحلیل کن»."; return; }
+  showTool("geo");
+  document.getElementById("gta").value = q.length > 20 ? q : "";
+  $hint.innerHTML = `کارت با <b>${TOOL_NAMES.geo}</b> راه میفته — بازش کردم 👇`;
+  document.getElementById("pane-geo").scrollIntoView({ behavior: "smooth", block: "start" });
+  if (q.length > 20) renderGeo();
 }
 document.getElementById("hgo").onclick = heroGo;
 $hq.addEventListener("keydown", e => { if (e.key === "Enter") heroGo(); });
 document.querySelectorAll("#hero-chips button").forEach(b => {
   b.onclick = () => { $hq.value = b.textContent; heroGo(); };
 });
-
-/* ---------- tool: iran-mcp router ---------- */
-const $rq = document.getElementById("rq");
-const $rmeta = document.getElementById("rmeta");
-const $rresults = document.getElementById("rresults");
-const ROUTER_SAMPLES = ["قیمت سکه امامی", "بلیط هواپیما تهران مشهد", "ارزون‌ترین گوشی شیائومی", "نوبت دکتر قلب در تهران"];
-const $rchips = document.getElementById("router-chips");
-ROUTER_SAMPLES.forEach(s => {
-  const b = document.createElement("button");
-  b.textContent = s;
-  b.onclick = () => { $rq.value = s; renderRouter(); };
-  $rchips.appendChild(b);
-});
-function renderRouter() {
-  const q = $rq.value.trim();
-  $rresults.innerHTML = "";
-  $rmeta.textContent = "";
-  if (!q) return;
-  let res;
-  try { res = RouterNS.route(q, 3); }
-  catch (e) { $rresults.innerHTML = '<div class="empty">خطا: ' + escapeHtml(e.message) + "</div>"; return; }
-  if (!res.length) {
-    $rresults.innerHTML = '<div class="empty">سرور مناسبی پیدا نشد.<br>یه عبارت دیگه امتحان کن — مثلاً «قیمت دلار».</div>';
-    return;
-  }
-  $rmeta.textContent = res.length + " گزینه از بین ۷۱ سرور";
-  const maxS = Math.max.apply(null, res.map(r => r.score).concat([1]));
-  res.forEach((r, i) => {
-    const card = document.createElement("div");
-    card.className = "card";
-    card.style.animationDelay = (i * 90) + "ms";
-    card.innerHTML =
-      '<div><span class="rank">' + (i + 1) + "</span><h3>" + escapeHtml(r.title) + "</h3>" +
-      '<span class="cat">' + escapeHtml(r.category) + "</span></div>" +
-      '<div class="scorebar"><i style="width:' + Math.round(100 * r.score / maxS) + '%"></i></div>' +
-      '<div class="desc">' + escapeHtml(r.description) + "</div>" +
-      '<div class="row"><span class="lbl">ابزار پیشنهادی</span><code>' + escapeHtml(r.suggested_tool) + "</code></div>" +
-      '<div class="row"><span class="lbl">دستور نصب</span><code>' + escapeHtml(r.install) + "</code>" +
-      '<button class="copy">کپی</button></div>' +
-      '<div class="row"><span class="lbl">ریپو</span><a class="repo" href="' + escapeHtml(r.repo) + '" target="_blank" rel="noopener">' +
-      escapeHtml(r.repo.replace("https://github.com/", "")) + "</a></div>" +
-      '<div class="reason"><b>چرا این؟</b> ' + escapeHtml(r.reason) + "</div>";
-    card.querySelector(".copy").onclick = e => copyText(e.target, r.install);
-    $rresults.appendChild(card);
-  });
-}
-document.getElementById("rgo").onclick = renderRouter;
-$rq.addEventListener("keydown", e => { if (e.key === "Enter") renderRouter(); });
 
 /* ---------- tool: persian GEO analyzer ---------- */
 const GCMAX = { answer_block_quality: 30, self_containment: 25, structural_readability: 20, statistical_density: 15, uniqueness_signals: 10 };
@@ -161,4 +104,4 @@ function renderGeo() {
 document.getElementById("ggo").onclick = renderGeo;
 
 /* default tab */
-showTool("router");
+showTool("geo");
